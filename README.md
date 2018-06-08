@@ -154,5 +154,3 @@ $ udacity submit
 The script will automatically create a zip archive of the required files (`my_custom_player.py` and `report.pdf` are required; `data.pickle` will be included if it exists) and submit your code to a remote server for testing. You can only submit a zip archive created by the PA script (even if you're only submitting a partial solution), and you **must submit the exact zip file created by the Project Assistant** in your classroom for review. The classroom verifies the zip file submitted against records on the Project Assistant system; any changes in the file will cause your submission to be rejected.
 
 **NOTE:** Students who authenticate with Facebook or Google accounts _must_ follow the instructions on the FAQ page [here](https://project-assistant.udacity.com/faq) to obtain an authentication token. (The Workspace already includes instructions for obtaining and configuring your token.)
-# Udacity-AIND-Adversarial-Search
-# Udacity-AIND-Adversarial-Search
