@@ -1,6 +1,7 @@
 
 from sample_players import DataPlayer
-
+from mcts import *
+import random
 
 class CustomPlayer(DataPlayer):
     """ Implement your own agent to play knight's Isolation
@@ -28,27 +29,34 @@ class CustomPlayer(DataPlayer):
 
         This method must call self.queue.put(ACTION) at least once, and may
         call it as many times as you want; the caller is responsible for
-        cutting off the function after the search time limit has expired. 
+        cutting off the function after the search time limit has expired.
 
         See RandomPlayer and GreedyPlayer in sample_players for more examples.
 
         **********************************************************************
-        NOTE: 
+        NOTE:
         - The caller is responsible for cutting off search, so calling
           get_action() from your own code will create an infinite loop!
           Refer to (and use!) the Isolation.play() function to run games.
         **********************************************************************
         """
-        # TODO: Replace the example implementation below with your own search
-        #       method by combining techniques from lecture
-        #
-        # EXAMPLE: choose a random move without any search--this function MUST
-        #          call self.queue.put(ACTION) at least once before time expires
-        #          (the timer is automatically managed for you)
-        # import random
+        import random
         # self.queue.put(random.choice(state.actions()))
+        if state.ply_count < 2:
+            self.queue.put(random.choice(state.actions()))
+        else:
+            ###### iterative deepening ######
+        # depth_limit = 5
+        # for depth in range(1,depth_limit+1):
+        #     best_move = self.alpha_beta_search(state,depth)
+        # self.queue.put(best_move)
+            depth_limit = 5
+            for depth in range(1, depth_limit + 1):
+                best_move = self.alpha_beta_search(state, depth)
+            self.queue.put(best_move)
 
-        self.queue.put(self.alpha_beta_search(state,10))
+            #### no iterative deepening ####
+            # self.queue.put(self.alpha_beta_search(state))
 
     def alpha_beta_search(self,state,depth=3):
         """ Return the move along a branch of the game tree that
@@ -57,38 +65,39 @@ class CustomPlayer(DataPlayer):
         def min_value(state, alpha, beta, depth):
             if state.terminal_test():
                 return state.utility(self.player_id)
-            if depth <= 0: return self.score(state)
-            v = float("inf")
-            for a in state.actions():
-                v = min(v, max_value(state.result(a), alpha, beta, depth-1))
-                if v <= alpha:
-                    return v
-                beta = min(beta, v)
-            return v
+            if depth <= 0:
+                return self.score(state)
+            value = float("inf")
+            for action in state.actions():
+                value = min(value, max_value(state.result(action), alpha, beta, depth-1))
+                if value <= alpha:
+                    return value
+                beta = min(beta, value)
+            return value
 
         def max_value(state, alpha, beta, depth):
             if state.terminal_test():
                 return state.utility(self.player_id)
             if depth <= 0: return self.score(state)
-            v = float("-inf")
-            for a in state.actions():
-                v = max(v, min_value(state.result(a), alpha, beta, depth-1))
-                if v >= beta:
-                    return v
-                alpha = max(alpha, v)
-            return v
+            value = float("-inf")
+            for action in state.actions():
+                value = max(value, min_value(state.result(action), alpha, beta, depth-1))
+                if value >= beta:
+                    return value
+                alpha = max(alpha, value)
+            return value
 
 
         alpha = float("-inf")
         beta = float("inf")
         best_score = float("-inf")
         best_move = None
-        for a in state.actions():
-            v = min_value(state.result(a), alpha, beta, depth-1)
-            alpha = max(alpha, v)
-            if v > best_score:
-                best_score = v
-                best_move = a
+        for action in state.actions():
+            value = min_value(state.result(action), alpha, beta, depth-1)
+            alpha = max(alpha, value)
+            if value >= best_score:
+                best_score = value
+                best_move = action
         return best_move
 
     def score(self, state):
@@ -97,3 +106,31 @@ class CustomPlayer(DataPlayer):
         own_liberties = state.liberties(own_loc)
         opp_liberties = state.liberties(opp_loc)
         return len(own_liberties) - len(opp_liberties)
+
+
+
+
+
+
+class CustomPlayer(DataPlayer):
+    """ Implement your own agent to play knight's Isolation
+    Monte Carlo Tree Search
+    """
+
+    def mcts(self,state):
+        root = MCTS_Node(state)
+        for _ in range(iter_limit):
+            child = tree_policy(root)
+            if not child:
+                continue
+            reward = default_policy(child.state)
+            backup(child, reward)
+
+        idx = root.children.index(best_child(root))
+        return root.children_actions[idx]
+
+    def get_action(self, state):
+        if state.ply_count < 2:
+            self.queue.put(random.choice(state.actions()))
+        else:
+            self.queue.put(self.mcts(state))
