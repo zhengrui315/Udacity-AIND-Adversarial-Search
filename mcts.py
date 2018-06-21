@@ -24,8 +24,8 @@ class MCTS_Node():
         return len(self.children_actions) == len(self.state.actions())
 
 
-FACTOR = 0.30
-iter_limit = 200
+FACTOR = 1.0
+iter_limit = 20
 
 # def mcts(state):
 #     root = MCTS_Node(state)
@@ -39,7 +39,7 @@ iter_limit = 200
 
 def tree_policy(node):
     """
-    Select a child node.
+    Select a leaf node.
     If not fully explored, return an unexplored child node.
     Otherwise, return the child node with the best score.
 
@@ -92,15 +92,17 @@ def default_policy(state):
     Randomly search the descendant of the state, and return the reward
 
     :param state:
-    :return: float
+    :return: int
     """
     init_state = copy.deepcopy(state)
     while not state.terminal_test():
         action = random.choice(state.actions())
         state = state.result(action)
 
-    # let the reward to be 1 for the winner, -1 for the loser
-    return 1 if state._has_liberties(init_state.player()) else -1
+    # let the reward be 1 for the winner, 0 for the loser
+    # if the init_state.player() wins, it means the action that leads to
+    # init_state should be discouraged, so reward = -1.
+    return -1 if state._has_liberties(init_state.player()) else 1
 
 
 def backup(node, reward):
@@ -109,8 +111,8 @@ def backup(node, reward):
     Use the result to update information in the nodes on the path.
 
     :param node:
-    :param reward:
-    :return: None
+    :param reward: int
+    :return:
     """
     while node != None:
         node.update(reward)
