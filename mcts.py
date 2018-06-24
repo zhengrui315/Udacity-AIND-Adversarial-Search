@@ -25,7 +25,7 @@ class MCTS_Node():
 
 
 FACTOR = 1.0
-iter_limit = 20
+iter_limit = 100
 
 # def mcts(state):
 #     root = MCTS_Node(state)
@@ -81,9 +81,9 @@ def best_child(node):
         elif score > best_score:
             best_children = [child]
             best_score = score
-    if len(best_children) == 0:
-        print("WARNING - RuiZheng, there is no best child")
-        return None
+    # if len(best_children) == 0:
+    #     print("WARNING - RuiZheng, there is no best child")
+    #     return None
     return random.choice(best_children)
 
 
@@ -99,7 +99,7 @@ def default_policy(state):
         action = random.choice(state.actions())
         state = state.result(action)
 
-    # let the reward be 1 for the winner, 0 for the loser
+    # let the reward be 1 for the winner, -1 for the loser
     # if the init_state.player() wins, it means the action that leads to
     # init_state should be discouraged, so reward = -1.
     return -1 if state._has_liberties(init_state.player()) else 1

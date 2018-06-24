@@ -1,6 +1,7 @@
 
 from sample_players import DataPlayer
 from mcts import *
+from isolation.isolation import _WIDTH, _HEIGHT
 import random
 
 class CustomPlayer(DataPlayer):
@@ -40,16 +41,14 @@ class CustomPlayer(DataPlayer):
           Refer to (and use!) the Isolation.play() function to run games.
         **********************************************************************
         """
-        import random
-        # self.queue.put(random.choice(state.actions()))
-        if state.ply_count < 2:
-            self.queue.put(random.choice(state.actions()))
+        if state.ply_count < 4:
+            # self.queue.put(random.choice(state.actions()))
+            if state.board in self.data:
+                self.queue.put(self.data[state.board])
+            else:
+                self.queue.put(random.choice(state.actions()))
         else:
             ###### iterative deepening ######
-        # depth_limit = 5
-        # for depth in range(1,depth_limit+1):
-        #     best_move = self.alpha_beta_search(state,depth)
-        # self.queue.put(best_move)
             depth_limit = 5
             for depth in range(1, depth_limit + 1):
                 best_move = self.alpha_beta_search(state, depth)
@@ -100,37 +99,57 @@ class CustomPlayer(DataPlayer):
                 best_move = action
         return best_move
 
+
+    def distance(self, state):
+        """ minimum distance to the walls """
+
+        # x_center, y_center = _HEIGHT // 2, (_WIDTH + 2) // 2
+        own_loc = state.locs[self.player_id]
+        x_player, y_player = own_loc // (_WIDTH + 2), own_loc % (_WIDTH + 2)
+        # return min(x_player, _WIDTH+1-x_player) + min(y_player, _HEIGHT-1-y_player)
+        return min(x_player, _WIDTH + 1 - x_player, y_player, _HEIGHT - 1 - y_player)
+
     def score(self, state):
         own_loc = state.locs[self.player_id]
         opp_loc = state.locs[1 - self.player_id]
         own_liberties = state.liberties(own_loc)
         opp_liberties = state.liberties(opp_loc)
-        return len(own_liberties) - len(opp_liberties)
-
-
-
-
-
-
-class CustomPlayer(DataPlayer):
-    """ Implement your own agent to play knight's Isolation
-    Monte Carlo Tree Search
-    """
-
-    def mcts(self,state):
-        root = MCTS_Node(state)
-        for _ in range(iter_limit):
-            child = tree_policy(root)
-            if not child:
-                continue
-            reward = default_policy(child.state)
-            backup(child, reward)
-
-        idx = root.children.index(best_child(root))
-        return root.children_actions[idx]
-
-    def get_action(self, state):
-        if state.ply_count < 2:
-            self.queue.put(random.choice(state.actions()))
+        # return len(own_liberties) - len(opp_liberties)
+        dis = self.distance(state)
+        if dis >= 2:
+            return 2*len(own_liberties) - len(opp_liberties)
         else:
-            self.queue.put(self.mcts(state))
+        # states away from walls from be encouraged, so the weight is bigger
+            return len(own_liberties) - len(opp_liberties)
+
+
+
+
+
+
+# class CustomPlayer(DataPlayer):
+#     """
+#     Implement an agent to play knight's Isolation with Monte Carlo Tree Search
+#     """
+#
+#     def mcts(self, state):
+#         root = MCTS_Node(state)
+#         if root.state.terminal_test():
+#             return random.choice(state.actions())
+#         for _ in range(iter_limit):
+#             child = tree_policy(root)
+#             if not child:
+#                 continue
+#             reward = default_policy(child.state)
+#             backup(child, reward)
+#
+#         idx = root.children.index(best_child(root))
+#         return root.children_actions[idx]
+#
+#     def get_action(self, state):
+#         if state.ply_count < 2:
+#             self.queue.put(random.choice(state.actions()))
+#         else:
+#             self.queue.put(self.mcts(state))
+
+
